@@ -1,0 +1,46 @@
+{
+  "_fixture": "SYNTHETIC TEST FIXTURE. NOT REAL COLLEGE FOOTBALL STATISTICS. DO NOT CITE. These schools are invented for the CFIP test suite.",
+  "teams": [
+    {
+      "id": 900001,
+      "school": "Fixture Falcons University",
+      "mascot": "Test Birds",
+      "abbreviation": "FFU",
+      "alternateNames": ["Do Not Cite"],
+      "conference": "Fixture Conference",
+      "division": "fixture-division",
+      "classification": "fixture",
+      "color": "#C4A15A",
+      "alternateColor": "#1C2B24",
+      "logos": ["https://example.invalid/not-a-real-logo.png"],
+      "twitter": "@not_a_real_team",
+      "location": {"city": "Nowhere", "state": "NA"}
+    },
+    {
+      "id": 900002,
+      "school": "Sample State Polytechnic",
+      "mascot": "Placeholders",
+      "abbreviation": "SSP",
+      "alternateNames": [],
+      "conference": "Sample League",
+      "division": "fixture-division",
+      "classification": "fixture",
+      "color": "#7D9B84",
+      "alternateColor": "#F4F1E8",
+      "logos": [],
+      "twitter": null
+    },
+    {
+      "id": 900003,
+      "school": "Empty Roster College",
+      "mascot": "Blanks",
+      "abbreviation": "ERC",
+      "conference": "Fixture Conference",
+      "division": "fixture-division",
+      "classification": "fixture",
+      "color": "#8A8175",
+      "alternateColor": "#F4F1E8",
+      "logos": null
+    }
+  ]
+}
