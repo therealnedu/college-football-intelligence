@@ -1,0 +1,12 @@
+[project]
+name = "cfip-backend"
+version = "0.1.0"
+description = "College Football Intelligence Platform API, phase 1."
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+markers = [
+  "live: calls CollegeFootballData.com and spends free-tier quota; skipped unless CFBD_API_KEY is set",
+]

@@ -1,0 +1,68 @@
+{
+  "_fixture": "SYNTHETIC TEST FIXTURE. NOT REAL COLLEGE FOOTBALL STATISTICS. DO NOT CITE. Numbers below are round placeholders. The season field is a placeholder; fixture mode stamps the season the user asked for.",
+  "stats": [
+    {
+      "season": 0,
+      "team": "Fixture Falcons University",
+      "conference": "Fixture Conference",
+      "statName": "netPassingYards",
+      "statValue": 100
+    },
+    {
+      "season": 0,
+      "team": "Fixture Falcons University",
+      "conference": "Fixture Conference",
+      "statName": "rushingYards",
+      "statValue": 40
+    },
+    {
+      "season": 0,
+      "team": "Fixture Falcons University",
+      "conference": "Fixture Conference",
+      "statName": "totalYards",
+      "statValue": "1,234"
+    },
+    {
+      "season": 0,
+      "team": "Fixture Falcons University",
+      "conference": "Fixture Conference",
+      "statName": "passingTDs",
+      "statValue": 3
+    },
+    {
+      "season": 0,
+      "team": "Fixture Falcons University",
+      "conference": "Fixture Conference",
+      "statName": "possessionTime",
+      "statValue": "99:99"
+    },
+    {
+      "season": 0,
+      "team": "Fixture Falcons University",
+      "conference": "Fixture Conference",
+      "statName": "turnoverMargin",
+      "statValue": 1
+    },
+    {
+      "season": 0,
+      "team": "Sample State Polytechnic",
+      "conference": "Sample League",
+      "statName": "netPassingYards",
+      "statValue": 20
+    },
+    {
+      "season": 0,
+      "team": "Sample State Polytechnic",
+      "conference": "Sample League",
+      "statName": "rushingYards",
+      "statValue": 10
+    },
+    {
+      "season": 0,
+      "team": "Sample State Polytechnic",
+      "conference": "Sample League",
+      "statName": "interceptions",
+      "statValue": 2
+    }
+  ]
+}
