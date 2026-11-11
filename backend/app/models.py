@@ -1,8 +1,8 @@
 """Relational schema for CFIP.
 
-Phase 1 writes data_sources, seasons, teams, team_seasons, team_statistics,
-and data_refresh_logs. The other tables exist so later phases have a stable
-contract; this phase does not put rows in them.
+The ingest pipeline writes data_sources, seasons, teams, team_seasons,
+team_statistics, games, and data_refresh_logs. Matchup notes, scouting
+reports, and AI logs still have tables and no writers.
 """
 
 from datetime import datetime
@@ -97,7 +97,12 @@ class TeamSeason(Base):
 
 
 class Game(Base):
-    """Created for later phases. Phase 1 does not ingest games."""
+    """One game in a season. Scores are stored as returned. A null score is not zero.
+
+    School names are stored beside the team foreign keys so an opponent that
+    is not in the ingested team list can still be shown. Betting fields are
+    not columns.
+    """
 
     __tablename__ = "games"
     __table_args__ = (
@@ -114,6 +119,8 @@ class Game(Base):
     start_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     home_team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"))
     away_team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"))
+    home_school: Mapped[str | None] = mapped_column(String(200))
+    away_school: Mapped[str | None] = mapped_column(String(200))
     home_points: Mapped[int | None] = mapped_column(Integer)
     away_points: Mapped[int | None] = mapped_column(Integer)
     neutral_site: Mapped[bool | None] = mapped_column(Boolean)

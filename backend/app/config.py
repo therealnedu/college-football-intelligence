@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     cfip_auto_migrate: bool = True
     cfip_min_season: int = 2004
     cfip_max_season: int | None = Field(default=None)
+    # Live ingest keeps this classification. Fixture ingest ignores it,
+    # because the synthetic schools are not FBS programs.
+    cfip_ingest_classification: str = "fbs"
+    cfip_ingest_pause_seconds: float = 1.0
+    cfip_ingest_min_remaining: int = 25
 
     @property
     def fixture_mode(self) -> bool:

@@ -1,0 +1,97 @@
+{
+  "_fixture": "SYNTHETIC RECORDED RESPONSE. NOT REAL COLLEGE FOOTBALL STATISTICS. NOT A COLLEGEFOOTBALLDATA.COM PAYLOAD. DO NOT CITE.",
+  "teams": [
+    {
+      "id": 800001,
+      "school": "Kept Falcon College",
+      "mascot": "Placeholders",
+      "abbreviation": "KFC",
+      "conference": "Recorded Conference",
+      "classification": "fbs",
+      "color": "#112233",
+      "alternateColor": "#FFFFFF",
+      "logos": ["https://example.invalid/logo.png"],
+      "twitter": "@not_real"
+    },
+    {
+      "id": 800002,
+      "school": "Kept River College",
+      "mascot": "Stand-ins",
+      "abbreviation": "KRC",
+      "conference": "Recorded Conference",
+      "classification": "FBS",
+      "color": "#334455"
+    },
+    {
+      "id": 800003,
+      "school": "Dropped Cellar College",
+      "mascot": "Filters",
+      "abbreviation": "DCC",
+      "conference": "Other League",
+      "classification": "fcs"
+    }
+  ],
+  "games": [
+    {
+      "id": 810001,
+      "season": 2024,
+      "week": 1,
+      "season_type": "regular",
+      "start_date": "2024-08-31T16:00:00Z",
+      "completed": true,
+      "neutral_site": false,
+      "venue": "Recorded Field",
+      "home_id": 800001,
+      "home_team": "Kept Falcon College",
+      "home_points": 17,
+      "away_id": 800002,
+      "away_team": "Kept River College",
+      "away_points": 14,
+      "betting": {"spread": -3, "overUnder": 49, "homeMoneyline": -140},
+      "homeLineScores": [7, 3, 7, 0],
+      "homePregameElo": 1500
+    },
+    {
+      "id": 810002,
+      "season": 2024,
+      "week": 2,
+      "seasonType": "regular",
+      "startDate": "2024-09-07T16:00:00Z",
+      "completed": true,
+      "neutralSite": false,
+      "venue": {"name": "Cellar Yard", "city": "Nowhere"},
+      "homeTeam": {"id": 800003, "name": "Dropped Cellar College", "points": 7},
+      "awayTeam": {"id": 800001, "school": "Kept Falcon College", "points": 21}
+    }
+  ],
+  "stats": [
+    {
+      "season": 2024,
+      "team": "Kept Falcon College",
+      "conference": "Recorded Conference",
+      "statName": "totalYards",
+      "statValue": "1,234"
+    },
+    {
+      "season": 2024,
+      "team": "Kept Falcon College",
+      "conference": "Recorded Conference",
+      "statName": "possessionTime",
+      "statValue": "30:00"
+    },
+    {
+      "season": 2024,
+      "team": "Dropped Cellar College",
+      "conference": "Other League",
+      "statName": "totalYards",
+      "statValue": 1
+    },
+    {
+      "season": 1999,
+      "team": "Kept Falcon College",
+      "conference": "Recorded Conference",
+      "statName": "rushingYards",
+      "statValue": 9
+    }
+  ]
+}

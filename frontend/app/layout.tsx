@@ -14,9 +14,9 @@ const newsreader = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: "CFIP · Team ledger",
+  title: "CFIP · College Football Intelligence",
   description:
-    "Phase 1 of the College Football Intelligence Platform. Select a season and a team to view stored season stats with a source and a timestamp.",
+    "A sourced college football team ledger. Select a season and a team to view stored season stats and results, with the data source labeled. Not a betting product.",
 };
 
 export default function RootLayout({

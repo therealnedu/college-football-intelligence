@@ -12,11 +12,21 @@ from app.cfbd import CfbdClient, CfbdResult
 from app.config import Settings
 from app.errors import AppError
 from app.fixtures_loader import load_fixture_list
-from app.models import DataRefreshLog, DataSource, Season, Team, TeamSeason, TeamStatistic
-from app.normalize import FIXTURE_LABEL, NormalizedStat, NormalizedTeam, normalize_stats, normalize_teams
+from app.models import DataRefreshLog, DataSource, Game, Season, Team, TeamSeason, TeamStatistic
+from app.normalize import (
+    FIXTURE_LABEL,
+    NormalizedGame,
+    NormalizedStat,
+    NormalizedTeam,
+    normalize_games,
+    normalize_stats,
+    normalize_teams,
+)
 from app.schemas import (
     Attribution,
     CacheInfo,
+    GameOut,
+    GamesResponse,
     RefreshStatusItem,
     RefreshStatusResponse,
     StatOut,
@@ -103,6 +113,54 @@ class Catalog:
                 )
                 raise
         return self._stats_response(team, season, fetched_at, cache_hit=False)
+
+    def list_games(self, season: int, team_id: int | None = None) -> GamesResponse:
+        """Read stored games. Fixture mode can load the synthetic file.
+
+        Live mode does not call CollegeFootballData.com from this request.
+        The ingest command is what spends a games call. An empty list means
+        no games are stored, not that every score was zero.
+        """
+
+        self._assert_season(season)
+        if self.settings.fixture_mode and self._fresh_refresh("games", season, None) is None:
+            if not self._has_affiliations(season):
+                self.list_teams(season)
+        team = None
+        if team_id is not None:
+            team = self._team_for_active_source(team_id)
+            if team is None:
+                raise AppError(
+                    "TEAM_NOT_FOUND",
+                    "No team with that id is stored for the active data source.",
+                    404,
+                )
+        with _lock(f"{self.settings.origin}:games:{season}"):
+            cached = self._fresh_refresh("games", season, None)
+            if cached is not None and cached.finished_at is not None:
+                return self._games_response(season, _as_utc(cached.finished_at), True, team)
+            if not self.settings.fixture_mode:
+                return self._games_response(season, _utcnow(), False, team)
+            started = time.perf_counter()
+            try:
+                payload = load_fixture_list("games.json", "games")
+                games, _skipped = normalize_games(payload)
+                stamped = [game.model_copy(update={"season": season}) for game in games]
+                written = self.replace_games(season, stamped)
+                fetched_at = self._success(
+                    resource="games",
+                    season=season,
+                    team_id=None,
+                    records_written=written,
+                    http_status=None,
+                    rate_limit_remaining=None,
+                    started=started,
+                )
+            except AppError as exc:
+                self.db.rollback()
+                self._failure(resource="games", season=season, team_id=None, error=exc, started=started)
+                raise
+        return self._games_response(season, fetched_at, False, team)
 
     def refresh_status(self, limit: int) -> RefreshStatusResponse:
         rows = self.db.scalars(
@@ -216,6 +274,7 @@ class Catalog:
                 affiliation.division = item.division
                 affiliation.classification = item.classification
                 affiliation.fetched_at = now
+        self.db.flush()
         return len(teams)
 
     def _replace_stats(self, team: Team, season: int, stats: list[NormalizedStat]) -> int:
@@ -248,6 +307,73 @@ class Catalog:
                 )
             )
         return len(kept)
+
+    def replace_games(self, season: int, games: list[NormalizedGame]) -> int:
+        """Replace this season's games for the active origin. Last id wins.
+
+        Running this twice with the same games leaves one row per external id.
+        """
+
+        self._ensure_season(season)
+        source = self._source()
+        now = _utcnow()
+        self.db.execute(
+            delete(Game).where(
+                Game.source_id == source.id,
+                Game.season_year == season,
+                Game.origin == self.settings.origin,
+            )
+        )
+        deduped: dict[int, NormalizedGame] = {}
+        for game in games:
+            if game.season != season:
+                continue
+            deduped[game.external_id] = game
+        ids = self._team_ids_by_external()
+        for game in deduped.values():
+            self.db.add(
+                Game(
+                    source_id=source.id,
+                    external_id=game.external_id,
+                    season_year=season,
+                    week=game.week,
+                    season_type=game.season_type,
+                    start_at=game.start_at,
+                    home_team_id=None if game.home_external_id is None else ids.get(game.home_external_id),
+                    away_team_id=None if game.away_external_id is None else ids.get(game.away_external_id),
+                    home_school=game.home_school,
+                    away_school=game.away_school,
+                    home_points=game.home_points,
+                    away_points=game.away_points,
+                    neutral_site=game.neutral_site,
+                    venue=game.venue,
+                    status=game.status,
+                    origin=self.settings.origin,
+                    fetched_at=now,
+                )
+            )
+        self.db.flush()
+        return len(deduped)
+
+    def teams_for_season(self, season: int) -> list[Team]:
+        source = self._source()
+        return list(
+            self.db.scalars(
+                select(Team)
+                .join(TeamSeason, TeamSeason.team_id == Team.id)
+                .where(
+                    Team.source_id == source.id,
+                    TeamSeason.season_year == season,
+                    TeamSeason.origin == self.settings.origin,
+                )
+                .order_by(Team.school.asc())
+            ).all()
+        )
+
+    def _team_ids_by_external(self) -> dict[int, int]:
+        source = self._source()
+        rows = self.db.scalars(select(Team).where(Team.source_id == source.id)).all()
+        return {row.external_id: row.id for row in rows}
 
     def _cached_team_list(self, season: int) -> TeamListResponse | None:
         refresh = self._fresh_refresh("teams", season, None)
@@ -345,6 +471,43 @@ class Catalog:
             team=_team_out(team, affiliation),
             season=season,
             stats=[_stat_out(row) for row in stat_rows],
+            attribution=self._attribution(fetched_at),
+            cache=CacheInfo(hit=cache_hit, ttlSeconds=self.settings.cfbd_cache_ttl_seconds, fetchedAt=fetched_at),
+        )
+
+    def _games_response(
+        self,
+        season: int,
+        fetched_at: datetime,
+        cache_hit: bool,
+        team: Team | None,
+    ) -> GamesResponse:
+        source = self._source()
+        rows = list(
+            self.db.scalars(
+                select(Game)
+                .where(
+                    Game.source_id == source.id,
+                    Game.season_year == season,
+                    Game.origin == self.settings.origin,
+                )
+                .order_by(Game.week.asc(), Game.start_at.asc(), Game.external_id.asc())
+            ).all()
+        )
+        if team is not None:
+            school = team.school.casefold()
+            rows = [
+                row
+                for row in rows
+                if row.home_team_id == team.id
+                or row.away_team_id == team.id
+                or (row.home_school or "").casefold() == school
+                or (row.away_school or "").casefold() == school
+            ]
+        return GamesResponse(
+            season=season,
+            teamId=None if team is None else team.id,
+            games=[_game_out(row) for row in rows],
             attribution=self._attribution(fetched_at),
             cache=CacheInfo(hit=cache_hit, ttlSeconds=self.settings.cfbd_cache_ttl_seconds, fetchedAt=fetched_at),
         )
@@ -474,6 +637,26 @@ def _team_out(team: Team, affiliation: TeamSeason | None) -> TeamOut:
         classification=None if affiliation is None else affiliation.classification,
         color=team.color,
         alternateColor=team.alternate_color,
+    )
+
+
+def _game_out(row: Game) -> GameOut:
+    return GameOut(
+        id=row.id,
+        externalId=row.external_id,
+        season=row.season_year,
+        week=row.week,
+        seasonType=row.season_type,
+        startAt=None if row.start_at is None else _as_utc(row.start_at),
+        homeTeamId=row.home_team_id,
+        awayTeamId=row.away_team_id,
+        homeSchool=row.home_school or "",
+        awaySchool=row.away_school or "",
+        homePoints=row.home_points,
+        awayPoints=row.away_points,
+        neutralSite=row.neutral_site,
+        venue=row.venue,
+        status=row.status,
     )
 
 

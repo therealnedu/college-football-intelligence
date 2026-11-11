@@ -41,3 +41,54 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install backend
+        working-directory: backend
+        run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Install frontend
+        working-directory: frontend
+        run: npm ci
+      - name: Build a fixture snapshot
+        working-directory: backend
+        env:
+          CFIP_DATA_MODE: fixture
+          CFBD_API_KEY: ""
+          DATABASE_URL: sqlite:///./data/ci-snapshot.db
+          CFIP_INGEST_PAUSE_SECONDS: "0"
+        run: python -m app.ingest --season 2025 --force --snapshot ../frontend/public/data/snapshot.json
+      - name: Export the static site
+        working-directory: frontend
+        env:
+          CFIP_STATIC_EXPORT: "true"
+          NEXT_PUBLIC_DATA_SOURCE: snapshot
+          NEXT_PUBLIC_BASE_PATH: /college-football-intelligence
+        run: npm run build
+      - name: Check the export
+        run: |
+          test -f frontend/out/index.html
+          test -f frontend/out/data/snapshot.json
+          test -f frontend/out/.nojekyll
+          grep -q "/college-football-intelligence/_next" frontend/out/index.html
+          python3 - <<'PY'
+          import json
+          data = json.load(open("frontend/out/data/snapshot.json"))
+          assert data["dataMode"] == "fixture"
+          notice = data["attribution"].get("fixtureNotice") or ""
+          assert "NOT REAL COLLEGE FOOTBALL STATISTICS" in notice
+          blob = json.dumps(data).lower()
+          for banned in ("spread", "moneyline", "betting", "logos"):
+              assert banned not in blob, banned
+          assert any(team["school"] == "Fixture Falcons University" for team in data["teams"])
+          PY

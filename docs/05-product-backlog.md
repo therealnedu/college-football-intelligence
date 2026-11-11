@@ -4,6 +4,8 @@ Ordered for the roadmap in `docs/06-roadmap.md`. Identifiers are stable. Accepta
 
 Priority is top to bottom inside each epic. Phase 1 stories are implemented except the live-provider check, which is blocked on a key.
 
+On 2026-11-11 epic E6 was pulled in front of comparison. E2, E3, and E4 are not implemented. E6's workflow is in the repo. Its public URL is not verified, and its live provider run is still blocked on a key.
+
 ## E1. Attributable team ledger
 
 ### E1-S1. Select a season and see teams
@@ -66,6 +68,50 @@ Acceptance:
 - The team list shows a skeleton while the request is in flight, an empty message when the filter matches nothing, and the API error text on failure.
 - A missing key shows the `howTo` text from the API.
 - Fixture mode shows a banner that the numbers are not real college football statistics before any chart.
+
+## E6. One-season ingest and a public snapshot
+
+Added 2026-11-11. This is the public-data release. It is not the comparison epic.
+
+### E6-S1. Load one season without duplicating rows
+
+As the owner of a 1,000-call key, I can load teams, games, and season stats for one season in a few calls, and run the load again without a second copy of the rows.
+
+Acceptance:
+
+- A live load requests `GET /teams`, `GET /games`, and `GET /stats/season` once each for that season, unless a fresh success is already inside the cache TTL. `--force` refreshes anyway.
+- The games request uses `seasonType=both` and does not request a betting route.
+- The stats request does not pass `team`, so one call covers the classification.
+- A second forced run updates a changed score and leaves one row per external id.
+- A run inside the TTL, without `--force`, makes no provider call.
+- Teams outside `CFIP_INGEST_CLASSIFICATION` are not stored on a live load. Fixture schools are not filtered, because they are not FBS.
+- Logos, social handles, and betting objects are not stored and are not in the snapshot file.
+- A missing score stays null.
+
+### E6-S2. Stay inside a small quota
+
+As the owner, a scheduled refresh does not walk every team and does not ignore a low remaining-quota header.
+
+Acceptance:
+
+- The client pauses between successful provider calls.
+- If the remaining-quota header is below `CFIP_INGEST_MIN_REMAINING`, later resources are not requested. The snapshot says the load was partial.
+- HTTP 401 is not retried. A `Retry-After` above 30 seconds fails on the first response. Those rules already live on the client.
+- CI and the default Pages build do not call the network when `CFBD_API_KEY` is empty.
+
+### E6-S3. Publish a labeled static page
+
+As a visitor with the public link, I can tell whether I am looking at fixture data or CollegeFootballData.com data, and the page works without a Python server.
+
+Acceptance:
+
+- The Pages workflow builds a static export. The browser reads the snapshot. It does not receive the key.
+- Fixture snapshots include `NOT REAL COLLEGE FOOTBALL STATISTICS`. A snapshot that omits that label is refused.
+- A live snapshot does not carry that label. It names CollegeFootballData.com and says the figures are not official NCAA, conference, or school statistics.
+- The page shows the source before a chart. A filter with no match, an empty stat list, and a blank score are visible states.
+- The workflow falls back to fixtures when the secret is absent. It does not pretend those rows are live.
+
+The workflow file is in the repo. Enabling GitHub Pages, and adding the key, are owner steps. They are not done in this environment.
 
 ## E2. Compare two teams
 

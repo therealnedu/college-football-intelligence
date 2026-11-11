@@ -18,11 +18,11 @@ This slice is for Chinedu Onyemaobi, a senior PM / TPM candidate, to walk throug
 
 ## What this does not demonstrate yet
 
-- A live CollegeFootballData.com response. Not run.
-- A public deployment. Not done.
-- AI quality. No model is called.
+- A live CollegeFootballData.com response. The client and the ingest path are tested with synthetic recorded responses. `pytest -m live` was not run. No key was available.
+- A verified public URL. The Pages workflow is in the repo. The expected address is https://therealnedu.github.io/college-football-intelligence/ . It was not opened, because the workflow runs from `main` and Pages has to be enabled by the owner.
+- Comparison, grounded answers, or an agent. Not built. No model is called.
 - Production traffic, on-call, or a team operating the system.
-- The owner's personal drafting or coding of this repository.
+- The owner's personal drafting or coding of this repository. Product direction is his. The code was written by an AI coding agent under that direction.
 
 ## How to talk about it
 
@@ -30,6 +30,7 @@ This slice is for Chinedu Onyemaobi, a senior PM / TPM candidate, to walk throug
 2. Show the terms decision: private cache and display, no raw proxy, no logos, no betting routes.
 3. Show the cache as the answer to a 1,000-call budget.
 4. Say clearly that the screen in fixture mode is a labeled synthetic review, and that the live path is implemented and untested until `pytest -m live` passes on his key.
-5. Close with the next decision he needs to make: key, public-repo host, and the RAM on the machine that would run Ollama. Those are in the README.
+5. For the public link, say it is a static snapshot. Without the secret it is fixture data. With the secret it is one season from CollegeFootballData.com, rebuilt on a schedule, and the browser does not hold the key.
+6. Close with the steps still in front of him: enable Pages, add the key as `CFBD_API_KEY`, and, later, the RAM on the machine that would run Ollama. Those are in the README.
 
 That sequence is the senior TPM signal: outcome, constraint, tradeoff, evidence, and the decision still in front of the owner.

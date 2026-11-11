@@ -1,6 +1,8 @@
 # Roadmap
 
-Five phases. Phase 1's code is in the repo. Its live provider check is not done. Later phases are not started. Dates below are decision dates, not delivery promises.
+Five phases, plus a public-data release that was pulled forward on 2026-11-11. Phase 1's code is in the repo. Its live provider check is not done. Comparison, grounded answers, and the agent are not started. Dates below are decision dates, not delivery promises.
+
+The public-data release is ingest of one season and a GitHub Pages snapshot. It is not phase 2's comparison work, and it is not a claim that phase 5's case study or security pass is done. The Pages workflow is in the repo. The public URL was not verified here.
 
 ## Phase 1 — Foundation
 
@@ -72,15 +74,18 @@ Phase 5 can ship a honest phase-1 slice without waiting for phase 4. The full ca
 | Risk | Why it matters | Response |
 | --- | --- | --- |
 | No API key in this environment | Live retrieval is untested | Fixture mode is labeled. README gives the key steps. Smoke test is skipped, not faked |
-| 1,000 calls per month | A public uncached demo spends the key | 24-hour cache, one call per team list and one per team-season, no `/info` probe |
+| 1,000 calls per month | A public uncached demo spends the key | 24-hour cache. The Pages ingest is three calls for one season, not one call per team. No `/info` probe |
 | Terms forbid a raw mirror | A pass-through API would violate the terms retrieved 2026-11-10 | Normalized CFIP contract only. Raw bodies are not stored |
 | Current season is incomplete | Users read a partial total as a full season | Default season is the previous calendar year. Copy says the current season can be incomplete |
-| Render disk is ephemeral | SQLite on Render disappears on sleep | Public demo uses Neon if it is deployed. Local demo uses SQLite |
+| Render disk is ephemeral | SQLite on Render disappears on sleep | The public demo does not use Render. It is a static snapshot. A later API host would still need an external database. Local demo uses SQLite |
 | Free hosts sleep or pause | An interview link looks broken | Say the cold start out loud, or run locally |
 | Hosted "free" LLM limits were ambiguous | Building phase 3 on the wrong quota | Ollama local is the default. Groq Developer numbers are not copied onto the Free plan |
 | Logos and school marks | Terms grant no trademark rights | No logos. Names identify the stat subject |
 | Fixture numbers quoted as real | Destroys the portfolio | Banner, provider name, and the phrase `NOT REAL COLLEGE FOOTBALL STATISTICS` |
-| Agent code described as the owner's typing | Misstates the work | Portfolio doc and README say a Cursor cloud agent wrote this slice under his direction |
+| Agent code described as the owner's typing | Misstates the work | Portfolio doc and README say an AI coding agent wrote this slice under his direction. Product direction is Chinedu's |
+| A public snapshot becomes a raw mirror | Terms forbid a substitute API | One season, FBS on a live load, CFIP fields only, betting keys refused, file not committed |
+| Pages is not enabled | The workflow cannot change the repo setting | README names the settings URL. Until it is on, there is no public site |
+| A visitor quotes the fixture page | The first public build has no key | The banner and the snapshot both say `NOT REAL COLLEGE FOOTBALL STATISTICS` |
 
 ## Decision log
 
@@ -98,6 +103,10 @@ Phase 5 can ship a honest phase-1 slice without waiting for phase 4. The full ca
 | 2026-11-10 | Ollama local is the later model default. No model is called now | Hosted free-tier numbers were not cleanly labeled, and prompts should stay on the machine |
 | 2026-11-10 | UI talks to the API through a Next.js rewrite | One public origin, key stays on the server |
 | 2026-11-10 | Alembic applies model metadata instead of a hand-copied DDL | One schema definition. A test compares migrated columns to the models |
+| 2026-11-11 | Public demo is a GitHub Pages snapshot, not Render plus Neon | Same GitHub account, no card, no sleeping API. Visitors do not call the provider. A live FastAPI host stays optional and is not set up |
+| 2026-11-11 | Ingest one season in three calls, previous calendar year, FBS | Protects the 1,000-call month and keeps the public copy to a bounded display |
+| 2026-11-11 | Recorded test bodies are synthetic, not provider captures | CI has no key, and the repo does not store their payloads |
+| 2026-11-11 | `GET /games` does not call the provider | The schedule is loaded by the ingest command. A page view cannot spend the quota |
 
 ## Testing strategy
 

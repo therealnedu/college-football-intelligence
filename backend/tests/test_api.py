@@ -71,6 +71,59 @@ def test_fixture_team_flow_is_labeled_and_cached(fixture_client):
     assert empty_stats.json()["stats"] == []
 
 
+def test_fixture_games_are_labeled_cached_and_not_a_betting_slip(fixture_client):
+    listed = fixture_client.get("/teams", params={"season": 2025})
+    teams = {item["school"]: item["id"] for item in listed.json()["teams"]}
+
+    first = fixture_client.get("/games", params={"season": 2025})
+    assert first.status_code == 200
+    body = first.json()
+    assert body["cache"]["hit"] is False
+    assert body["attribution"]["dataMode"] == "fixture"
+    assert "NOT REAL COLLEGE FOOTBALL STATISTICS" in body["attribution"]["fixtureNotice"]
+    assert "spread" not in first.text
+    assert "betting" not in first.text
+    assert "moneyline" not in first.text.lower()
+    assert "logos" not in first.text
+    assert len(body["games"]) == 2
+    final = next(game for game in body["games"] if game["status"] == "final")
+    assert final["homeSchool"] == "Fixture Falcons University"
+    assert final["homePoints"] == 24
+    assert final["awayPoints"] == 10
+    assert final["homeTeamId"] == teams["Fixture Falcons University"]
+    scheduled = next(game for game in body["games"] if game["status"] == "scheduled")
+    assert scheduled["homePoints"] is None
+    assert scheduled["awayPoints"] is None
+    assert scheduled["venue"] == "Placeholder Stadium"
+
+    second = fixture_client.get("/games", params={"season": 2025})
+    assert second.json()["cache"]["hit"] is True
+    refreshes = [
+        row for row in fixture_client.get("/refresh-status").json()["refreshes"] if row["resource"] == "games"
+    ]
+    assert len(refreshes) == 1
+
+    falcons = fixture_client.get("/games", params={"season": 2025, "teamId": teams["Fixture Falcons University"]})
+    assert len(falcons.json()["games"]) == 2
+    empty = fixture_client.get("/games", params={"season": 2025, "teamId": teams["Empty Roster College"]})
+    assert len(empty.json()["games"]) == 1
+
+    early = fixture_client.get("/games", params={"season": 1999})
+    assert early.status_code == 422
+    assert early.json()["error"]["code"] == "SEASON_OUT_OF_RANGE"
+
+
+def test_live_games_read_does_not_call_the_provider(unconfigured_live_client):
+    response = unconfigured_live_client.get("/games", params={"season": 2025})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["games"] == []
+    assert body["cache"]["hit"] is False
+    assert body["attribution"]["dataMode"] == "live"
+    assert body["attribution"]["providerName"] == "CollegeFootballData.com"
+    assert unconfigured_live_client.get("/refresh-status").json()["refreshes"] == []
+
+
 def test_validation_and_missing_team(fixture_client):
     missing = fixture_client.get("/teams")
     assert missing.status_code == 422

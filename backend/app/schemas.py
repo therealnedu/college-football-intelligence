@@ -67,6 +67,34 @@ class TeamStatsResponse(BaseModel):
     cache: CacheInfo
 
 
+class GameOut(BaseModel):
+    """A stored game. Null points mean the score was not stored."""
+
+    id: int
+    externalId: int
+    season: int
+    week: int | None = None
+    seasonType: str | None = None
+    startAt: datetime | None = None
+    homeTeamId: int | None = None
+    awayTeamId: int | None = None
+    homeSchool: str
+    awaySchool: str
+    homePoints: int | None = None
+    awayPoints: int | None = None
+    neutralSite: bool | None = None
+    venue: str | None = None
+    status: str | None = None
+
+
+class GamesResponse(BaseModel):
+    season: int
+    teamId: int | None = None
+    games: list[GameOut]
+    attribution: Attribution
+    cache: CacheInfo
+
+
 class SeasonBounds(BaseModel):
     minSeason: int
     maxSeason: int
