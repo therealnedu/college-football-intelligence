@@ -9,6 +9,7 @@ from app.cfbd import CfbdClient
 from app.config import get_settings
 from app.db import get_db
 from app.schemas import (
+    GamesResponse,
     HealthResponse,
     RefreshStatusResponse,
     SeasonBounds,
@@ -71,6 +72,15 @@ def teams(
     catalog: Catalog = Depends(get_catalog),
 ) -> TeamListResponse:
     return catalog.list_teams(season)
+
+
+@router.get("/games", response_model=GamesResponse)
+def games(
+    season: int = Query(..., description="Season year."),
+    teamId: int | None = Query(default=None, description="Limit to games involving this CFIP team id."),
+    catalog: Catalog = Depends(get_catalog),
+) -> GamesResponse:
+    return catalog.list_games(season, teamId)
 
 
 @router.get("/teams/{team_id}/stats", response_model=TeamStatsResponse)

@@ -1,0 +1,91 @@
+# Publish the static demo to GitHub Pages.
+#
+# The site is https://therealnedu.github.io/college-football-intelligence/
+# after Pages is set to deploy from GitHub Actions. This file cannot flip that
+# repository setting.
+#
+# A run with the CFBD_API_KEY secret loads one season from CollegeFootballData.com
+# (teams, games, and season stats: three calls, then a pause between calls).
+# A run without the secret publishes the labeled fixture snapshot and does not
+# call the provider. The browser never receives the key.
+#
+# Schedule: Mondays 14:00 UTC. That is about four live runs a month, plus
+# pushes to main and manual runs. The free tier documented on 2026-11-10 is
+# 1,000 calls per month.
+
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 14 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install backend
+        working-directory: backend
+        run: pip install -r requirements.txt
+      - name: Install frontend
+        working-directory: frontend
+        run: npm ci
+      - name: Build the snapshot
+        working-directory: backend
+        env:
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+          DATABASE_URL: sqlite:///./data/pages.db
+          CFIP_INGEST_PAUSE_SECONDS: "1"
+          CFIP_INGEST_MIN_REMAINING: "25"
+          CFIP_INGEST_CLASSIFICATION: fbs
+        run: |
+          if [ -n "$CFBD_API_KEY" ]; then
+            echo "Ingest mode: live. A key is configured. This run calls CollegeFootballData.com."
+            export CFIP_DATA_MODE=live
+          else
+            echo "Ingest mode: fixture. CFBD_API_KEY is not set. The page will say the numbers are synthetic."
+            export CFIP_DATA_MODE=fixture
+          fi
+          python -m app.ingest --season auto --force --allow-fixture-fallback --snapshot ../frontend/public/data/snapshot.json
+      - name: Export the static site
+        working-directory: frontend
+        env:
+          CFIP_STATIC_EXPORT: "true"
+          NEXT_PUBLIC_DATA_SOURCE: snapshot
+          NEXT_PUBLIC_BASE_PATH: /college-football-intelligence
+        run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

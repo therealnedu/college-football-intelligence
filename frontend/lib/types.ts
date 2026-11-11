@@ -51,6 +51,32 @@ export type TeamStatsResponse = {
   cache: CacheInfo;
 };
 
+export type Game = {
+  id: number;
+  externalId: number;
+  season: number;
+  week: number | null;
+  seasonType: string | null;
+  startAt: string | null;
+  homeTeamId: number | null;
+  awayTeamId: number | null;
+  homeSchool: string;
+  awaySchool: string;
+  homePoints: number | null;
+  awayPoints: number | null;
+  neutralSite: boolean | null;
+  venue: string | null;
+  status: string | null;
+};
+
+export type GamesResponse = {
+  season: number;
+  teamId: number | null;
+  games: Game[];
+  attribution: Attribution;
+  cache: CacheInfo;
+};
+
 export type SeasonBounds = {
   minSeason: number;
   maxSeason: number;

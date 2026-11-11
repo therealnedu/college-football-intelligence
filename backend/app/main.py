@@ -52,7 +52,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="CFIP API",
         version="0.1.0",
-        summary="Phase 1 team ledger for the College Football Intelligence Platform.",
+        summary="Team ledger and season ingest for the College Football Intelligence Platform.",
         lifespan=lifespan,
     )
     app.add_middleware(

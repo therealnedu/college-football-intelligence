@@ -43,6 +43,32 @@ class CfbdClient:
         # probe on 2026-11-10 returned 401 for this path and 404 for /stats/team/season.
         return self.get_json("/stats/season", {"year": season, "team": school})
 
+    def fetch_games(self, season: int, classification: str | None = None) -> CfbdResult:
+        """One call for the season schedule and results.
+
+        `seasonType=both` is regular season plus postseason. All-star games
+        are not requested. Betting lines live on a different route and are
+        not requested here.
+        """
+
+        params: dict[str, object] = {"year": season, "seasonType": "both"}
+        if classification:
+            params["classification"] = classification
+        return self.get_json("/games", params)
+
+    def fetch_season_stats(self, season: int, classification: str | None = None) -> CfbdResult:
+        """One call for every team's season stats in a classification.
+
+        The documented operation requires `year` or `team`. Passing `year`
+        without `team` is the bulk read. The provider default classification
+        is FBS; this client sends the classification explicitly when asked.
+        """
+
+        params: dict[str, object] = {"year": season}
+        if classification:
+            params["classification"] = classification
+        return self.get_json("/stats/season", params)
+
     def get_json(self, path: str, params: dict) -> CfbdResult:
         key = self.settings.cfbd_api_key.strip()
         if not key:
@@ -63,7 +89,7 @@ class CfbdClient:
         headers = {
             "Authorization": f"Bearer {key}",
             "Accept": "application/json",
-            "User-Agent": "cfip-phase1/0.1 (server-side portfolio client)",
+            "User-Agent": "cfip/0.2 (server-side portfolio client)",
         }
         last_error: AppError | None = None
         for attempt in range(1, attempts + 1):

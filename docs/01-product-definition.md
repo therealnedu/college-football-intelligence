@@ -57,3 +57,5 @@ There is no revenue target. The value of phase 1 is a trustworthy stat line and 
 ## What "real" means here
 
 Live mode is implemented. It was not executed in this environment, because `CFBD_API_KEY` was not set. Fixture mode was executed. Fixture rows are synthetic. See the README verification section before describing any figure as a college football statistic.
+
+On 2026-11-11 a public snapshot was added: one season can be ingested and published as a static page. That does not change this definition. Comparison, questions, and an agent are still not built. The public page is labeled fixture data until the owner adds a key.

@@ -89,8 +89,10 @@ Google's Gemini free tier was not opened on a primary pricing page in this run, 
 
 ## Recommended public demo
 
-1. **Interviews and daily use:** run both processes locally, the way this repository was verified. SQLite persists. The key stays in `.env`.
-2. **A public link, still $0, no card:** Cloudflare Pages for the UI, Render's free web service for FastAPI, Neon Free for Postgres. Expect a cold start of about a minute after 15 idle minutes. The 24-hour cache is what keeps a handful of demo teams inside 1,000 provider calls. Do not commit a database file of provider rows. Put `CFBD_API_KEY` in Render's environment settings, not in the Pages project.
-3. **Do not** describe that public link as production. Render's own free-tier page says not to use free instances for production.
+Decision on 2026-11-11: the public link is a **GitHub Pages static snapshot of this same repository**. It needs no new account and no card. The workflow is `.github/workflows/pages.yml`. The expected URL is https://therealnedu.github.io/college-football-intelligence/ . That URL is not a verified deployment until Pages is set to GitHub Actions and the workflow runs on `main`.
 
-Phase 1 is not deployed. No URL in this document is a CFIP deployment.
+The snapshot is one season. Live builds call the provider about three times and then the page is static, so visitors do not spend the 1,000-call month. Without the `CFBD_API_KEY` secret, the page is the labeled fixture snapshot.
+
+1. **Interviews and daily use:** run both processes locally. SQLite persists. The key stays in `.env`.
+2. **The public link:** GitHub Pages, as above. No separate frontend host, API host, or database account.
+3. **Optional, not set up:** Cloudflare Pages for a UI, Render's free web service for FastAPI, and Neon Free for Postgres, as assessed below. That path needs extra accounts. Expect a cold start of about a minute after 15 idle minutes. Do not commit a database file of provider rows. Put `CFBD_API_KEY` in the API host's environment, not in the static site. Render's own free-tier page says not to use free instances for production. This combination was not deployed.

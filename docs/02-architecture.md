@@ -69,6 +69,16 @@ Errors use one JSON shape: `error.code`, `error.message`, `error.details`.
 
 A failed refresh is rolled back and then recorded on `data_refresh_logs`. An empty stat list for a known team is a successful refresh with zero rows, and the UI shows the empty state. An empty team list from the live provider is treated as an upstream failure so a bad response is not cached for a day.
 
+## Public snapshot
+
+The LinkedIn demo does not run FastAPI. GitHub Actions runs `python -m app.ingest` for one season and writes `frontend/public/data/snapshot.json`. That file is the same fields the API returns: teams, games, stats, and an attribution object. Next.js is then exported with `CFIP_STATIC_EXPORT=true` and `NEXT_PUBLIC_BASE_PATH=/college-football-intelligence`. GitHub Pages serves `frontend/out`.
+
+If `CFBD_API_KEY` is set in the Actions secret, the three calls are teams, games (`seasonType=both`, classification from `CFIP_INGEST_CLASSIFICATION`, default `fbs`), and season stats for that year. The job pauses between calls and stops before the next call when the remaining-quota header is under `CFIP_INGEST_MIN_REMAINING`. If the secret is empty, the job loads `backend/fixtures` and the snapshot says `NOT REAL COLLEGE FOOTBALL STATISTICS`.
+
+The snapshot is not committed. Raw provider bodies are not written into it. Betting keys are refused at write time. Opening the Pages site does not call CollegeFootballData.com.
+
+The local API still answers `GET /games`. In fixture mode that read loads the synthetic file. In live mode it returns stored rows only. It does not spend a provider call. Games get into the live database when the ingest command runs.
+
 ## Why this shape
 
 A single Next.js app could have called the provider from a server function. That was not used. The target architecture is a separate FastAPI service so the later agent, the cache, and the key have one server-side home. Vercel-style hosting of the UI does not run that process. Hosting consequences are in `docs/03-free-technology-assessment.md`.

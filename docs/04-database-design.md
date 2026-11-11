@@ -1,6 +1,6 @@
 # Database design
 
-SQLite is the phase 1 database. The schema is the SQLAlchemy models in `backend/app/models.py`. Alembic revision `0001_initial` applies that metadata. A test checks that the migrated tables and columns match the models.
+SQLite is the local database. The schema is the SQLAlchemy models in `backend/app/models.py`. Alembic revision `0001_initial` applies that metadata. Revision `0002_game_schools` adds `games.home_school` and `games.away_school` when an older database does not already have them. A test checks that the migrated tables and columns match the models.
 
 Postgres can use the same models later. That switch was not run.
 
@@ -36,7 +36,7 @@ erDiagram
 
 ## Tables
 
-Phase 1 writes `data_sources`, `seasons`, `teams`, `team_seasons`, `team_statistics`, and `data_refresh_logs`. `games`, `matchup_analyses`, `scouting_reports`, and `ai_execution_logs` are created and unused.
+The ingest command writes `data_sources`, `seasons`, `teams`, `team_seasons`, `team_statistics`, `games`, and `data_refresh_logs`. `matchup_analyses`, `scouting_reports`, and `ai_execution_logs` are created and unused.
 
 ### data_sources
 
@@ -83,7 +83,9 @@ Unique `(team_id, season_year, origin)`. Index on `(season_year, origin)`.
 
 ### games
 
-Unused. `source_id`, `external_id` unique together. `season_year` FK. `week`, `season_type`, `start_at`, `home_team_id`, `away_team_id`, points, `neutral_site`, `venue`, `status`, `origin`, `fetched_at`. Index on `(season_year, week)`.
+Written by ingest, and by `GET /games` in fixture mode. `source_id`, `external_id` unique together. `season_year` FK. `week`, `season_type`, `start_at`, `home_team_id`, `away_team_id`, `home_school`, `away_school`, points, `neutral_site`, `venue`, `status`, `origin`, `fetched_at`. Index on `(season_year, week)`.
+
+School names are stored because an opponent may not be in the ingested team list. Points are null when no score was stored. They are not filled with zero. Betting fields are not columns. A load deletes that season and origin, then inserts the current games, so a second run does not duplicate rows.
 
 ### team_statistics
 
@@ -119,7 +121,7 @@ One row per refresh attempt. Cache hits are not rows.
 | --- | --- |
 | id | PK |
 | source_id | FK, nullable if the source row was missing |
-| resource | `teams` or `team_season_stats` |
+| resource | `teams`, `games`, `team_season_stats`, or `season_stats` |
 | season_year | Nullable only for a future non-season resource |
 | team_id | Null for the team list. Set for one team's stats |
 | status | `success` or `error` |
